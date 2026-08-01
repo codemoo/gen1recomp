@@ -90,12 +90,27 @@ KNOWN_CONTENT_LINES=""
 run_content_behavior() {
   local out
   out=$("$LUA" tests/run_tests.lua 2>&1)
+  local status=$?
   local count
   count=$(printf '%s\n' "$out" | grep -c '^FAIL ' || true)
   local lines
   lines=$(printf '%s\n' "$out" | grep '^FAIL ' | sort)
 
-  if [ "$count" -eq "$KNOWN_CONTENT_FAILURES" ] \
+  # An uncaught Lua error prints a traceback and zero "FAIL " lines, so on
+  # its own the count/lines comparison below cannot tell a crash from a
+  # clean run -- it would read "0 == 0 known failures" and pass. Catch that
+  # shape explicitly, by name, before it can slip through.
+  if [ "$status" -ne 0 ] && [ "$count" -eq 0 ]; then
+    printf '%s\n' "$out" | tail -20
+    echo "run_tests.lua crashed (exit $status) -- see traceback above"
+    return 1
+  fi
+
+  # Belt and suspenders: whatever nonzero exit did produce FAIL lines,
+  # never let it match the allowlist into a pass -- a real crash mid-run
+  # could in principle leave behind a FAIL count/lines that happen to
+  # coincide with the known set.
+  if [ "$status" -eq 0 ] && [ "$count" -eq "$KNOWN_CONTENT_FAILURES" ] \
      && [ "$lines" = "$(printf '%s\n' "$KNOWN_CONTENT_LINES" | sort)" ]; then
     printf '%s\n' "$out" | tail -3
     if [ "$KNOWN_CONTENT_FAILURES" -gt 0 ]; then
