@@ -676,6 +676,43 @@ check(out:find("MK305 WARN", 1, true) ~= nil, "skipped dump check is reported")
 
 os.execute((rmdir .. " %q"):format(root))
 
+-- ------- modkit CLI: translation scaffold
+-- `translation` had zero coverage before this, which is why five defects
+-- lived in it for ~30 commits.  This pins the scaffold's file list; later
+-- work builds on run_modkit() to catch the refresh-contract defects.
+
+-- Task 2-5 call this: run_modkit(argsString) -> exitCode, stdout.  Reuses
+-- the run() helper above (same EXIT: parsing, same python resolution)
+-- rather than inventing a second subprocess convention.
+local function run_modkit(argstr)
+  local out, code = run(("%s tools/modkit.py %s"):format(python, argstr))
+  return code, out
+end
+
+do
+  local koTmp = os.tmpname()
+  os.remove(koTmp)
+  local koRoot = (isWindows and koTmp:gsub("\\", "/") or koTmp) .. "_kotest"
+  check(os.execute((mkdir .. " %q"):format(koRoot)) == 0
+    or os.execute((mkdir .. " %q"):format(koRoot)) == true, "translation scratch dir")
+
+  local code, out = run_modkit(("translation kotest --language korean --dest %q")
+    :format(koRoot))
+  check(code == 0, "translation scaffold exits 0: " .. out)
+
+  local scaffoldDir = koRoot .. "/kotest"
+  for _, f in ipairs({ "manifest.json", "main.lua", "README.md", "TRANSLATING.md",
+                       "lang/dialogue.lua", "lang/strings.lua",
+                       "lang/species_names.lua", "lang/font.lua",
+                       "lang/charmap.lua", "lang/naming.lua" }) do
+    local handle = io.open(scaffoldDir .. "/" .. f, "rb")
+    check(handle ~= nil, "translation scaffold writes " .. f)
+    if handle then handle:close() end
+  end
+
+  os.execute((rmdir .. " %q"):format(koRoot))
+end
+
 -- ------- restore shared runtime state for the suites that follow
 
 Runtime.events, Runtime.hooks = savedEvents, savedHooks
