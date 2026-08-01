@@ -2637,14 +2637,19 @@ do
                -- row whose step re-applies through the aggregate
                -- Game:applyOptions instead of a single subsystem setter, so
                -- this stub needs the method too (c8e035d added the row
-               -- without it). A no-op recorder, not a call-through: every
+               -- without it). A bare no-op, not a call-through: every
                -- subsystem the real Game:applyOptions fans out to is already
                -- exercised headless and directly elsewhere in this suite
                -- (Music/Sound/PaletteFX/Tilt/GBCFX/Zoom/TileRenderer/
                -- VideoMode below, TouchControls at :1737), so duplicating
                -- its ~40-line fan-out here would just re-test those a
                -- second, divergence-prone way instead of the row itself.
-               applyOptions = function(self, opts) self.appliedOptions = opts end }
+               -- (Recording the passed-in opts table would be pointless:
+               -- the step function passes g.save.options by reference, so
+               -- self.appliedOptions == self.save.options always holds by
+               -- construction -- an assertion on it would be vacuous, not
+               -- coverage.)
+               applyOptions = function() end }
   local om = OptionsMenu.new(og)
   local function press(btn)
     OInput.pressed = { [btn] = true }

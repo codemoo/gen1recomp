@@ -106,11 +106,14 @@ run_content_behavior() {
     return 1
   fi
 
-  # Belt and suspenders: whatever nonzero exit did produce FAIL lines,
-  # never let it match the allowlist into a pass -- a real crash mid-run
-  # could in principle leave behind a FAIL count/lines that happen to
-  # coincide with the known set.
-  if [ "$status" -eq 0 ] && [ "$count" -eq "$KNOWN_CONTENT_FAILURES" ] \
+  # run_tests.lua (tests/run_tests.lua:3437) exits 1 whenever ANY FAIL line
+  # was printed, allowlisted or not -- so a nonzero status here is the
+  # normal, expected shape for a run that only hit known failures, not a
+  # sign of a crash.  (The crash shape -- nonzero status, zero FAIL lines --
+  # was already caught and returned above; by construction, anything that
+  # reaches this point with count > 0 has real FAIL lines to compare
+  # against the allowlist, not a traceback.)  Match on count + text alone.
+  if [ "$count" -eq "$KNOWN_CONTENT_FAILURES" ] \
      && [ "$lines" = "$(printf '%s\n' "$KNOWN_CONTENT_LINES" | sort)" ]; then
     printf '%s\n' "$out" | tail -3
     if [ "$KNOWN_CONTENT_FAILURES" -gt 0 ]; then
