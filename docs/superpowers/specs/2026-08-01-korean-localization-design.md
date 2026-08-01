@@ -151,9 +151,11 @@ newQuad((i % perRow) * GLYPH, floor(i/perRow) * cellH, GLYPH, cellH, iw, ih)
 
 호출부 실측: `Font.draw` **287곳**, `Font.drawCode` **69곳**, `Font.drawBox` 54곳.
 
-> **`tools/save-editor/` 는 범위 밖이다.** `src.render.Font` 를 아예 require 하지 않는
-> LÖVE 네이티브 UI 다 (`Theme.lua:304` 의 `G.newFont`). 이전 조사에서 "세이브 에디터도
-> 폰트 문제" 라고 한 것은 **틀렸다** — 별개 이슈이며 이 패치와 무관하다.
+> **`tools/save-editor/` 는 이 패치(P4)의 범위 밖이다.** `src.render.Font` 를 아예
+> require 하지 않는 LÖVE 네이티브 UI 라(`Theme.lua:304` 의 `G.newFont`) 셀 높이 개념이
+> 적용되지 않는다. 다만 **P6 의 범위에는 들어간다** — `Theme.spaced` 등이 문자열을
+> **바이트 단위로 순회**해서 한글 3바이트를 각각 글리프로 그리고 폭을 3배로 잰다.
+> 즉 "폰트 셀" 문제는 아니고 "멀티바이트 순회" 문제다.
 
 16px 글리프가 위로 자라므로, **위쪽 8px 밴드가 점유된 행**이 충돌한다. 대화상자는
 104–111 / 120–127 행이 비어 있어 안전하다. 충돌하는 화면과 스크롤 상수는 220개 사이트
@@ -205,6 +207,14 @@ newQuad((i % perRow) * GLYPH, floor(i/perRow) * cellH, GLYPH, cellH, iw, ih)
 
 7음절 한글 OT(21바이트)가 3음절 + 깨진 선행바이트로 잘리고, **그 값이 받은 포켓몬에
 저장된다.** `NamingScreen` 은 타이핑된 셀을 테이블로 들고 있어 이미 글리프 기준이라 문제없다.
+
+**표시 전용 사이트는 별도로 존재한다.** 세이브에 남지 않으므로 심각도는 낮지만 같은 패치에
+묶는다: `Handshake.lua:173`(줄바꿈), `LinkState.lua:728,736`, `ManagerState.lua:52,961`,
+`QuarantineReport.lua:18`, `TownMap.lua:412`(`#name * 8` 로 폭 계산), `Console.lua:344`(백스페이스).
+`tools/save-editor/` 의 `Theme.spaced`·`ellipsize` 계열은 문자열을 **바이트 단위로 순회**해
+한글을 3배 폭으로 재고 각 바이트를 글리프로 그린다 — 자체 UTF-8 순회 헬퍼로 고친다.
+
+공통 도구로 `Font.glyphCount(text)` / `Font.cut(text, maxGlyphs)` 를 추가한다.
 
 **⭐ 업스트림 가치:** 멀티바이트 전 언어 공통 버그다.
 
