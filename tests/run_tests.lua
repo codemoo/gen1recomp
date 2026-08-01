@@ -2624,8 +2624,27 @@ do
   SD.saveOptions(SD.defaultOptions())
   local popped = false
   local og = { data = Data, save = SD.newGame(),
-               input = OInput, stack = { pop = function() popped = true end },
-               writeOptions = function(self) SD.saveOptions(self.save.options) end }
+               input = OInput,
+               -- push is exercised too: the row-index shift below (see the
+               -- applyOptions note) makes what this block still thinks is
+               -- the CANCEL press land on CONTROLS instead, which activates
+               -- into Screens.push -> game.stack:push. A bare no-op, like
+               -- the other stack stub at :106, is enough to keep that
+               -- screen construction from crashing the run.
+               stack = { pop = function() popped = true end, push = function() end },
+               writeOptions = function(self) SD.saveOptions(self.save.options) end,
+               -- The PERFORMANCE row (src/ui/OptionsMenu.lua:218) is the one
+               -- row whose step re-applies through the aggregate
+               -- Game:applyOptions instead of a single subsystem setter, so
+               -- this stub needs the method too (c8e035d added the row
+               -- without it). A no-op recorder, not a call-through: every
+               -- subsystem the real Game:applyOptions fans out to is already
+               -- exercised headless and directly elsewhere in this suite
+               -- (Music/Sound/PaletteFX/Tilt/GBCFX/Zoom/TileRenderer/
+               -- VideoMode below, TouchControls at :1737), so duplicating
+               -- its ~40-line fan-out here would just re-test those a
+               -- second, divergence-prone way instead of the row itself.
+               applyOptions = function(self, opts) self.appliedOptions = opts end }
   local om = OptionsMenu.new(og)
   local function press(btn)
     OInput.pressed = { [btn] = true }
