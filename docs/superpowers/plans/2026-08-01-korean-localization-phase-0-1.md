@@ -21,6 +21,8 @@
   git fetch upstream && git checkout -b <브랜치명> upstream/dev
   ```
 - **작업 완료 조건은 `scripts/test.sh` 전 티어 통과.** CI 는 ROM 이 없어 T3 를 스킵하므로 로컬에서 반드시 직접 돌린다.
+- **`tests/modkit_tests.lua` 는 `tests/run_modkit.lua` 가 아니라 `tests/run_tests.lua`(T3 티어)에서 `dofile` 된다.** `run_modkit.lua` 는 `tests/modkit/cases/` 와 `mods/*/tests` 만 훑는다. 이 파일의 테스트를 돌릴 때는 `luajit tests/run_tests.lua` 를 쓴다.
+- **`scripts/test.sh` 만 믿지 말고 종료코드를 직접 본다.** `run_content_behavior()` 가 `^FAIL ` 라인 수만 세고 종료코드를 무시해서, T3 가 **크래시하면 FAIL 라인이 0개라 PASS 로 보고**된다. Task 1.5 에서 고치기 전까지는 반드시 `luajit tests/run_tests.lua; echo $?` 로 직접 확인한다.
 - **커밋 메시지는 영어**, 코드 주석은 주변 코드와 같은 언어(영어)로 쓴다. 이 저장소는 업스트림에 제출된다.
 - 기준 리비전: `upstream/dev` @ `50947ee`.
 
@@ -126,7 +128,7 @@ end
 
 ```sh
 cd /Users/hwanmooy/Dropbox/dev/pokemon/gen1recomp
-luajit tests/run_modkit.lua 2>&1 | tail -20
+luajit tests/run_tests.lua 2>&1 | tail -20
 ```
 
 기대: PASS. 스캐폴드 자체는 정상 동작하므로 이 케이스는 통과해야 한다. **실패하면 헬퍼가 잘못된 것이니 Step 1 로 돌아간다.**
@@ -176,7 +178,7 @@ end
 - [ ] **Step 2: 테스트를 돌려 실패를 확인**
 
 ```sh
-luajit tests/run_modkit.lua 2>&1 | grep -E 'hooks:on|hooks:wrap|wrap callback'
+luajit tests/run_tests.lua 2>&1 | grep -E 'hooks:on|hooks:wrap|wrap callback'
 ```
 
 기대: 3건 FAIL.
@@ -200,7 +202,7 @@ luajit tests/run_modkit.lua 2>&1 | grep -E 'hooks:on|hooks:wrap|wrap callback'
 - [ ] **Step 4: 테스트 통과 확인**
 
 ```sh
-luajit tests/run_modkit.lua 2>&1 | tail -5
+luajit tests/run_tests.lua 2>&1 | tail -5
 ```
 
 기대: ALL TESTS PASSED.
@@ -245,7 +247,7 @@ end
 - [ ] **Step 2: 테스트를 돌려 실패를 확인**
 
 ```sh
-luajit tests/run_modkit.lua 2>&1 | grep 'assets:path'
+luajit tests/run_tests.lua 2>&1 | grep 'assets:path'
 ```
 
 기대: FAIL.
@@ -274,7 +276,7 @@ luajit tests/run_modkit.lua 2>&1 | grep 'assets:path'
 - [ ] **Step 4: 테스트 통과 확인**
 
 ```sh
-luajit tests/run_modkit.lua 2>&1 | tail -5
+luajit tests/run_tests.lua 2>&1 | tail -5
 ```
 
 - [ ] **Step 5: 커밋**
@@ -327,7 +329,7 @@ end
 - [ ] **Step 2: 테스트를 돌려 실패를 확인**
 
 ```sh
-luajit tests/run_modkit.lua 2>&1 | grep 'refresh #'
+luajit tests/run_tests.lua 2>&1 | grep 'refresh #'
 ```
 
 기대: `refresh #1` PASS, `refresh #2` FAIL.
@@ -346,7 +348,7 @@ luajit tests/run_modkit.lua 2>&1 | grep 'refresh #'
 - [ ] **Step 4: 테스트 통과 확인**
 
 ```sh
-luajit tests/run_modkit.lua 2>&1 | tail -5
+luajit tests/run_tests.lua 2>&1 | tail -5
 ```
 
 - [ ] **Step 5: 커밋**
@@ -395,7 +397,7 @@ end
 - [ ] **Step 2: 테스트를 돌려 실패를 확인**
 
 ```sh
-luajit tests/run_modkit.lua 2>&1 | grep clobber
+luajit tests/run_tests.lua 2>&1 | grep clobber
 ```
 
 기대: 2건 FAIL.
@@ -410,7 +412,7 @@ luajit tests/run_modkit.lua 2>&1 | grep clobber
 - [ ] **Step 4: 테스트 통과 확인 + 전체 회귀**
 
 ```sh
-luajit tests/run_modkit.lua 2>&1 | tail -5
+luajit tests/run_tests.lua 2>&1 | tail -5
 ./scripts/test.sh 2>&1 | tail -5
 ```
 
