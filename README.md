@@ -1,4 +1,36 @@
-# Gen1Recomp
+# Gen1Recomp — 한국어판 (Korean localization fork)
+
+> **이 저장소는 [bryanthaboi/gen1recomp](https://github.com/bryanthaboi/gen1recomp) 의 포크입니다.**
+> 원본 게임을 **한국어로 플레이할 수 있게 만드는 것**이 이 포크의 목적입니다.
+>
+> | | |
+> |---|---|
+> | **`ko`** (기본 브랜치) | 한국어화 작업 통합 브랜치. 아래 엔진 패치들이 머지됩니다 |
+> | **`dev`** | 업스트림을 그대로 추적. 로컬 커밋 없음 — PR 브랜치는 여기서 땁니다 |
+>
+> ### 한국어화 구성
+>
+> 번역문 자체는 이 저장소에 들어가지 않습니다. **별도의 번역 모드**로 배포되고,
+> 이 포크에는 그 모드가 동작하기 위해 필요한 **엔진 수정**만 들어갑니다.
+> 엔진 수정은 전부 업스트림에 올릴 수 있는 형태로, 주제별 브랜치 1개 = PR 1개로 관리합니다.
+>
+> | 패치 | 내용 |
+> |---|---|
+> | `cellH` | `Font.lua` 가 페이지별 글리프 높이를 지원하도록 (8x16 한글 글리프용). 일본어·중국어도 같은 제약을 받습니다 |
+> | modkit | 번역 모드 스캐폴더(`tools/modkit.py translation`) 버그 수정 + 테스트 추가 |
+> | strings | 아직 `Strings` 로 감싸이지 않은 UI 문자열 래핑 |
+> | layout | 세로 8px 간격으로 줄을 쌓는 화면들을 16px 글리프에 맞게 재배치 |
+> | josa | 조사(은/는·이/가·을/를) 자동 선택 훅 — 앞 음절 받침으로 판별 |
+> | names | 이름을 **바이트 단위로 자르는** 코드 수정 (한글 3바이트가 중간에서 잘려 세이브에 기록되는 버그) |
+>
+> 한글 글리프는 [Galmuri](https://galmuri.quiple.dev) (SIL OFL) 를 8x16 셀로 사용하며,
+> 이는 정식 한국어판 포켓몬스터 금·은이 같은 160x144 화면에서 택한 방식과 동일합니다.
+>
+> ---
+>
+> *아래는 원본 저장소의 README 입니다.*
+
+---
 
 A native LÖVE2D recreation of Poke Red, Blue and Yellow. The engine and map
 behavior are hand-written Lua; game data and graphics are decoded from a ROM
